@@ -1,42 +1,70 @@
 <script>
   import { createEventDispatcher } from 'svelte';
+  import { uid } from '$lib/utils.js';
   const dispatch = createEventDispatcher();
+  let dialog;
 
-  let title = '';
-  let description = '';
-  let dueDate = '';
-  let storyPoints = 1;
-  let priority = 'medium';
+  export function open() { dialog && dialog.showModal(); }
+  export function close() { dialog && dialog.close(); }
 
-  function createIssue() {
-    const issue = {
-      id: crypto.randomUUID(),
-      title,
-      description,
+  let title = '', description = '', dueDate = '', storyPoints = 1, priority = 'Medium';
+
+  function submit(e) {
+    e.preventDefault();
+    const item = {
+      id: uid(),
+      title: title.trim() || 'Untitled',
+      description: description.trim(),
       creationDate: new Date().toISOString(),
-      dueDate,
-      storyPoints,
+      dueDate: dueDate || null,
+      storyPoints: Number(storyPoints) || 0,
       priority,
-      lane: 'do'
+      lane: 'Do'
     };
-    dispatch('create', issue);
+    dispatch('create', { detail: item });
+    dispatch('created', item);
+    title=''; description=''; dueDate=''; storyPoints=1; priority='Medium';
+    close();
+    window.dispatchEvent(new CustomEvent('kanban:changed'));
   }
 </script>
 
-<dialog open class="bg-white rounded-2xl shadow-lg w-96 p-6">
-  <h2 class="text-xl font-bold mb-4">Neues Issue</h2>
-  <input class="w-full border rounded p-2 mb-2" placeholder="Titel" bind:value={title} />
-  <textarea class="w-full border rounded p-2 mb-2" placeholder="Beschreibung" bind:value={description}></textarea>
-  <input type="date" class="w-full border rounded p-2 mb-2" bind:value={dueDate} />
-  <input type="number" min="1" class="w-full border rounded p-2 mb-2" placeholder="Story Points" bind:value={storyPoints} />
-  <select class="w-full border rounded p-2 mb-4" bind:value={priority}>
-    <option value="low">Niedrig</option>
-    <option value="medium">Mittel</option>
-    <option value="high">Hoch</option>
-  </select>
+<dialog bind:this={dialog} class="rounded-lg">
+  <form class="p-6 space-y-4" onsubmit={submit}>
+    <h3 class="text-xl font-semibold">Neues Issue</h3>
+    <div>
+      <!-- svelte-ignore a11y_label_has_associated_control -->
+      <label class="block text-sm">Title</label>
+      <input required bind:value={title} class="mt-1 w-full rounded-md border-gray-200 p-2" />
+    </div>
+    <div>
+      <!-- svelte-ignore a11y_label_has_associated_control -->
+      <label class="block text-sm">Description</label>
+      <textarea bind:value={description} rows="4" class="mt-1 w-full rounded-md border-gray-200 p-2"></textarea>
+    </div>
+    <div class="grid grid-cols-3 gap-3">
+      <div>
+        <!-- svelte-ignore a11y_label_has_associated_control -->
+        <label class="block text-sm">Due Date</label>
+        <input type="datetime-local" bind:value={dueDate} class="mt-1 w-full rounded-md border-gray-200 p-2" />
+      </div>
+      <div>
+        <!-- svelte-ignore a11y_label_has_associated_control -->
+        <label class="block text-sm">Story Points</label>
+        <input type="number" min="0" bind:value={storyPoints} class="mt-1 w-full rounded-md border-gray-200 p-2" />
+      </div>
+      <div>
+        <!-- svelte-ignore a11y_label_has_associated_control -->
+        <label class="block text-sm">Priority</label>
+        <select bind:value={priority} class="mt-1 w-full rounded-md border-gray-200 p-2">
+          <option>Low</option><option selected>Medium</option><option>High</option>
+        </select>
+      </div>
+    </div>
 
-  <div class="flex justify-end gap-2">
-    <button onclick={() => dispatch('close')} class="px-4 py-2 bg-gray-200 rounded">Abbrechen</button>
-    <button onclick={createIssue} class="px-4 py-2 bg-blue-600 text-white rounded">Erstellen</button>
-  </div>
+    <div class="flex justify-end gap-3">
+      <button type="button" onclick={close} class="px-4 py-2 rounded-md border">Abbrechen</button>
+      <button type="submit" class="px-4 py-2 rounded-md bg-primary text-white">Erstellen</button>
+    </div>
+  </form>
 </dialog>

@@ -1,19 +1,28 @@
 <script>
   import { onMount } from 'svelte';
-  let country = '...';
+  export let serverCountry = null;
+  let country = serverCountry || '...';
 
-  onMount(async () => {
+  async function fetchCountry() {
     try {
       const res = await fetch('https://ipapi.co/json/');
-      const data = await res.json();
-      country = data.country_name || 'Unbekannt';
-    } catch {
-      country = 'Unbekannt';
-    }
+      if (!res.ok) return;
+      const j = await res.json();
+      country = j.country_name || j.country || country;
+    } catch(e) { country = country || '—'; }
+  }
+
+  onMount(() => {
+    if (!country || country === '...') fetchCountry();
   });
 </script>
 
-<header class="bg-blue-600 text-white p-4 shadow flex justify-between items-center">
-  <h1 class="text-2xl font-bold">Kanban Board</h1>
-  <p class="text-sm">🌍 Land: {country}</p>
+<header class="bg-gradient-to-r from-white to-sky-50 border-b border-slate-100 p-4">
+  <div class="max-w-6xl mx-auto flex items-center justify-between">
+    <div>
+      <div class="text-2xl font-bold text-primary">La Vida</div>
+      <div class="text-sm text-slate-500">Kanban Board</div>
+    </div>
+    <div class="text-sm text-slate-600">Standort: <strong class="text-slate-800">{country}</strong></div>
+  </div>
 </header>
