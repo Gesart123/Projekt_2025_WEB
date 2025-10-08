@@ -1,18 +1,27 @@
 import { writable } from 'svelte/store';
-const KEY = 'kanban_v2_items';
 
+export const lanes = writable([
+  { key: 'do', title: 'To Do' },
+  { key: 'doing', title: 'Doing' },
+  { key: 'done', title: 'Done' },
+  { key: 'archiv', title: 'Archiv' }
+]);
 
-function load(){
-try { return JSON.parse(localStorage.getItem(KEY) || '[]'); }
-catch(e){ return []; }
+export const issues = writable([]);
+
+export function loadIssues() {
+  const stored = localStorage.getItem('issues');
+  if (stored) issues.set(JSON.parse(stored));
 }
 
+export function saveIssues() {
+  issues.subscribe(value => {
+    localStorage.setItem('issues', JSON.stringify(value));
+  })();
+}
 
-export const itemsStore = writable(load());
-itemsStore.subscribe(v => { try { localStorage.setItem(KEY, JSON.stringify(v)); } catch(e){} });
-
-
-export function addItem(item){ itemsStore.update(a=>[...a,item]); }
-export function removeItem(id){ itemsStore.update(a=>a.filter(i=>i.id!==id)); }
-export function updateItem(id, patch){ itemsStore.update(a=>a.map(i=>i.id===id?{...i,...patch}:i)); }
-export function moveItem(id,to){ itemsStore.update(a=>a.map(i=>i.id===id?{...i,lane:to}:i)); }
+export function moveIssue(id, newLane) {
+  issues.update(list =>
+    list.map(i => (i.id === id ? { ...i, lane: newLane } : i))
+  );
+}

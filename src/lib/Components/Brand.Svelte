@@ -1,20 +1,19 @@
 <script>
-    export let country = '—';
-    </script>
-    
-    
-    <header class="brand">
-    <div class="title">
-    <div class="logo">La Vida</div>
-    <div class="subtitle">Kanban</div>
-    </div>
-    <div class="country">{country}</div>
-    </header>
-    
-    
-    <style>
-    .brand{display:flex;justify-content:space-between;align-items:center;padding:1rem;border-bottom:1px solid rgba(0,0,0,0.06);background:linear-gradient(90deg,#ffffff,#f7fbff)}
-    .logo{font-weight:700;font-size:1.1rem}
-    .subtitle{font-size:0.9rem;color:#666}
-    .country{font-size:0.9rem;color:#333}
-    </style>
+  import { onMount } from 'svelte';
+  let country = '...';
+
+  onMount(async () => {
+    try {
+      const res = await fetch('https://ipapi.co/json/');
+      const data = await res.json();
+      country = data.country_name || 'Unbekannt';
+    } catch {
+      country = 'Unbekannt';
+    }
+  });
+</script>
+
+<header class="bg-blue-600 text-white p-4 shadow flex justify-between items-center">
+  <h1 class="text-2xl font-bold">Kanban Board</h1>
+  <p class="text-sm">🌍 Land: {country}</p>
+</header>
